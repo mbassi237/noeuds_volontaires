@@ -54,6 +54,7 @@ services:
       - HEARTBEAT_INTERVAL=${HEARTBEAT_INTERVAL:-30}
       - HEARTBEAT_TIMEOUT=${HEARTBEAT_TIMEOUT:-90}
       - SOCKET_TIMEOUT=${SOCKET_TIMEOUT:-300}
+      - ALLOW_DATASET_DOWNLOAD=${ALLOW_DATASET_DOWNLOAD:-1}
 
       # OPTIONAL — hardware hints (advertised to coordinator)
       - CPU_CORES=${CPU_CORES:-}
