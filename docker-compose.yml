@@ -64,7 +64,7 @@ services:
     # Volumes
     # Persist results outside the container
     volumes:
-      - ./results:/app/results
+      - ./results:/app/results:rw
 
     # Network
     # Use host network so the volunteer can reach coordinator/manager
