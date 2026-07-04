@@ -74,6 +74,9 @@ services:
     # Shared memory size for PyTorch DataLoader (default is 64MB, which is too small)
     shm_size: '2gb'
 
+    # Give the volunteer time to finish current batch + save stats before SIGKILL
+    stop_grace_period: 30s
+
     # Disable auto-restart so container stops when training rounds limit is reached
     restart: "no"
     labels:
