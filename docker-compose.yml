@@ -56,6 +56,12 @@ services:
       - SOCKET_TIMEOUT=${SOCKET_TIMEOUT:-300}
       - ALLOW_DATASET_DOWNLOAD=${ALLOW_DATASET_DOWNLOAD:-0}
 
+      # AD-PSGD
+      - ADPSGD_ENABLED=${ADPSGD_ENABLED:-true}
+      - ADPSGD_TOPOLOGY=${ADPSGD_TOPOLOGY:-exponential}
+      - ADPSGD_ROLE=${ADPSGD_ROLE:-auto}
+      - ADPSGD_ALPHA=${ADPSGD_ALPHA:-0.5}
+
       # OPTIONAL — hardware hints (advertised to coordinator)
       - CPU_CORES=${CPU_CORES:-}
       - RAM_GB=${RAM_GB:-}
