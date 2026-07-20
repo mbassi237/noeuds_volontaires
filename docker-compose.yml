@@ -38,6 +38,13 @@ services:
       # lui-même (fonctionne identiquement sur Linux/Windows/macOS)
       - TAILSCALE_AUTHKEY=${TAILSCALE_AUTHKEY}
 
+      # OPTIONAL mais recommandé — évite le goulot d'étranglement du chiffrement
+      # WireGuard/Tailscale pour les gros transferts (modèles, stats) en les
+      # faisant passer par l'IP PUBLIQUE du Manager plutôt que sa route
+      # tailnet. Nécessite API_TOKEN (même valeur des deux côtés).
+      - MANAGER_PUBLIC_HOST=${MANAGER_PUBLIC_HOST:-}
+      - API_TOKEN=${API_TOKEN:-}
+
       # OPTIONAL — all have defaults (see src/config.py)
       - N_VOLUNTEERS=${N_VOLUNTEERS:-5}
       - MY_IP=${MY_IP:-}
