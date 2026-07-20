@@ -73,6 +73,8 @@ Valeurs à adapter :
 
 Les autres variables (`COORDINATOR_HOST`, `MANAGER_HOST`, `DATASET`, etc.) sont normalement déjà correctement pré-configurées — ne les modifiez que si on vous le demande explicitement.
 
+La variable `TAILSCALE_AUTHKEY` doit également être renseignée : c'est la clé qui permet au **conteneur** de rejoindre automatiquement le tailnet de l'expérience (VPN reliant votre PC au serveur central). Elle vous sera communiquée avec les autres valeurs.
+
 ---
 
 ## Étape 4 — Lancer le nœud volontaire
@@ -86,13 +88,13 @@ chmod +x talinet_volunteer.sh
 
 Ce script va, dans l'ordre :
 
-1. Installer Tailscale (VPN qui relie votre PC au réseau de l'expérience) et vous demander votre mot de passe `sudo`.
-2. Rejoindre le tailnet de l'expérience.
-3. Vérifier la connexion au serveur central.
-4. Télécharger (ou construire) l'image Docker du volontaire, puis démarrer le conteneur (`docker compose up -d`).
-5. Afficher les logs du conteneur en direct.
+1. Télécharger (ou construire) l'image Docker du volontaire.
+2. Démarrer le conteneur (`docker compose up -d`), qui rejoint lui-même le tailnet de l'expérience au démarrage grâce à `TAILSCALE_AUTHKEY` — aucune installation ni configuration réseau sur votre machine n'est nécessaire, y compris sous Windows/macOS.
+3. Afficher les logs du conteneur en direct.
 
 Laissez ce terminal ouvert pour continuer à suivre les logs, ou fermez-le : le conteneur continue de tourner en arrière-plan.
+
+> Le conteneur a besoin d'un accès `/dev/net/tun` et de la capacité `NET_ADMIN` (déjà déclarés dans `docker-compose.yml`) pour établir sa propre connexion Tailscale — c'est normal et attendu, aucune action de votre part n'est requise au-delà de démarrer Docker.
 
 ---
 

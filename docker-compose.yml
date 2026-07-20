@@ -34,6 +34,9 @@ services:
       - VOLUNTEER_ID=${VOLUNTEER_ID:-0}
       - COORDINATOR_HOST=${COORDINATOR_HOST}
       - MANAGER_HOST=${MANAGER_HOST}
+      # REQUIRED — clé Tailscale pour que CE conteneur rejoigne le tailnet
+      # lui-même (fonctionne identiquement sur Linux/Windows/macOS)
+      - TAILSCALE_AUTHKEY=${TAILSCALE_AUTHKEY}
 
       # OPTIONAL — all have defaults (see src/config.py)
       - N_VOLUNTEERS=${N_VOLUNTEERS:-5}
@@ -68,14 +71,23 @@ services:
       - NETWORK_MBPS=${NETWORK_MBPS:-}
 
     # Volumes
-    # Persist results outside the container
+    # Persist results outside the container, and persist the Tailscale
+    # node identity so a container restart doesn't re-consume the authkey
+    # or spawn a duplicate device in the tailnet.
     volumes:
       - ./results:/app/results:rw
+      - tailscale-state:/var/lib/tailscale
 
     # Network
-    # Use host network so the volunteer can reach coordinator/manager
-    # and they can reach it by its real IP.
-    network_mode: host
+    # NOTE : `network_mode: host` a été retiré. Il ne donne PAS accès au vrai
+    # réseau de l'hôte sur Docker Desktop (Windows/macOS) — seulement sur
+    # Docker natif Linux — ce qui empêchait ces volontaires de joindre le
+    # tailnet. Le conteneur rejoint maintenant le tailnet lui-même
+    # (entrypoint.sh), ce qui fonctionne identiquement sur toutes les OS.
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun
 
     # Shared memory size for PyTorch DataLoader (default is 64MB, which is too small)
     shm_size: '2gb'
@@ -96,3 +108,6 @@ services:
       - DOCKER_API_VERSION=1.40
     command: --interval 300 --label-enable --cleanup
     restart: unless-stopped
+
+volumes:
+  tailscale-state:

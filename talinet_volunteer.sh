@@ -1,11 +1,15 @@
-#1. Rejoindre le tailnet (une fois par machine)
-curl -fsSL https://tailscale.com/install.sh | sh
-sudo tailscale up --authkey=tskey-auth-kPnnLcg5ne11CNTRL-SZaNHYCTcUKfM1KjEjYpUK69vtcTHUbDF
+#!/bin/bash
+set -euo pipefail
 
-#2. Vérifier la connexion au VPS
-tailscale ping 100.91.21.29
+# Le conteneur volontaire rejoint désormais le tailnet lui-même
+# (TAILSCALE_AUTHKEY dans .env), donc plus besoin d'installer/joindre
+# Tailscale sur l'hôte ici : fonctionne identiquement sur Linux/Windows/macOS.
 
-#3. Lancer
+if ! grep -q '^TAILSCALE_AUTHKEY=.\+' .env 2>/dev/null; then
+    echo "Erreur : TAILSCALE_AUTHKEY manquant dans .env" >&2
+    exit 1
+fi
+
 docker compose pull
 docker compose up -d
 docker compose logs -f volunteer
