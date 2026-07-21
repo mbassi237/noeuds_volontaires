@@ -8,7 +8,10 @@
 #   4. docker compose logs -f     # follow logs
 #   5. docker compose down        # stop the volunteer
 #
-# To run multiple volunteers on the same machine:
+# VOLUNTEER_ID / N_VOLUNTEERS are OPTIONAL — leave them unset in .env for the
+# Coordinator to assign an ID automatically (recommended for real deployments,
+# one volunteer per machine). Only set them explicitly to run multiple
+# volunteers on the SAME machine for local simulation:
 #   VOLUNTEER_ID=1 docker compose -p volunteer1 up -d
 #   VOLUNTEER_ID=2 docker compose -p volunteer2 up -d
 # =============================================================================
@@ -31,9 +34,12 @@ services:
     # Environment
     environment:
       # REQUIRED
-      - VOLUNTEER_ID=${VOLUNTEER_ID:-0}
       - COORDINATOR_HOST=${COORDINATOR_HOST}
       - MANAGER_HOST=${MANAGER_HOST}
+      # OPTIONAL — laissez VIDES pour une attribution automatique par le
+      # Coordinateur (recommandé). Ne les renseignez que pour une simulation
+      # locale multi-instances sur une même machine.
+      - VOLUNTEER_ID=${VOLUNTEER_ID:-}
       # REQUIRED — clé Tailscale pour que CE conteneur rejoigne le tailnet
       # lui-même (fonctionne identiquement sur Linux/Windows/macOS)
       - TAILSCALE_AUTHKEY=${TAILSCALE_AUTHKEY}
@@ -46,7 +52,7 @@ services:
       - API_TOKEN=${API_TOKEN:-}
 
       # OPTIONAL — all have defaults (see src/config.py)
-      - N_VOLUNTEERS=${N_VOLUNTEERS:-5}
+      - N_VOLUNTEERS=${N_VOLUNTEERS:-}
       - MY_IP=${MY_IP:-}
       - DATASET=${DATASET:-cifar10}
       - DATA_PARTITION=${DATA_PARTITION:-iid}

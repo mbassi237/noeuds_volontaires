@@ -1,0 +1,15 @@
+{
+  "my_mac": "F6:24:21:CB:6D:01",
+  "window": 5,
+  "confidence": 0.95,
+  "xi": 4.0,
+  "history_size": 1,
+  "n_arms_seen": 1,
+  "per_arm": {
+    "BA:C8:3E:3A:D3:6F": {
+      "total_pulls": 1,
+      "total_reward": 0.302,
+      "avg_reward": 0.302
+    }
+  }
+}

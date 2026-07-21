@@ -1,0 +1,40 @@
+{
+  "vol_id": 1,
+  "mac": "F6:24:21:CB:6D:01",
+  "timestamp": 1784581474.7945898,
+  "available_resources": {
+    "ram_free": 2.74,
+    "cpu_load": 5.1,
+    "cpu_cores": 8,
+    "cpu_freq": 2.0,
+    "bw": 100.0,
+    "battery": 11.0,
+    "disk_free": 2.83
+  },
+  "estimated_needs": {
+    "ram_needed": 0.17,
+    "gradient_size": 42.63,
+    "parameter_size": 42.63,
+    "epoch_time_estimate": 1445.5,
+    "communication_cost_mb": 2.13,
+    "min_bandwidth_needed_mbps": 2.84
+  },
+  "verdicts": {
+    "ram_ok": true,
+    "bandwidth_ok": true,
+    "timing_ok": false,
+    "warnings": [
+      "TIMING SERRÉ : 1 epochs ≈ 1445.5s vs GOSSIP_INTERVAL=60s (l'entraînement risque de ne pas tenir dans le cycle gossip)"
+    ]
+  },
+  "config_used": {
+    "dataset": "cifar10",
+    "batch_size": 32,
+    "local_epochs": 1,
+    "gossip_interval": 60,
+    "gossip_fanout": 1,
+    "compression": "jointsq",
+    "quantization_bits": 8,
+    "sparsification_ratio": 0.05
+  }
+}
