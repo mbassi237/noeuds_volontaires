@@ -63,7 +63,7 @@ services:
       - LOCAL_EPOCHS=${LOCAL_EPOCHS:-1}
       - MODEL_NAME=${MODEL_NAME:-resnet18}
       - BATCH_SIZE=${BATCH_SIZE:-32}
-      - LEARNING_RATE=${LEARNING_RATE:-0.001}
+      - LEARNING_RATE=${LEARNING_RATE:-0.01}
       - NUM_CLASSES=${NUM_CLASSES:-10}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - STATS_DIR=${STATS_DIR:-/app/results}
@@ -84,12 +84,18 @@ services:
       - NETWORK_MBPS=${NETWORK_MBPS:-}
 
     # Volumes
-    # Persist results outside the container, and persist the Tailscale
+    # Persist results outside the container, persist the Tailscale
     # node identity so a container restart doesn't re-consume the authkey
-    # or spawn a duplicate device in the tailnet.
+    # or spawn a duplicate device in the tailnet, and persist the detected
+    # MAC address so this volunteer keeps the SAME Coordinator-assigned ID
+    # across restarts (Docker gives the container a brand new virtual eth0
+    # MAC every time it's recreated, which otherwise looks like a new
+    # physical volunteer each time — eventually exhausting valid IDs and
+    # breaking the data partitioning).
     volumes:
       - ./results:/app/results:rw
       - tailscale-state:/var/lib/tailscale
+      - volunteer-identity:/var/lib/volunteer_identity
 
     # Network
     # NOTE : `network_mode: host` a été retiré. Il ne donne PAS accès au vrai
@@ -124,3 +130,4 @@ services:
 
 volumes:
   tailscale-state:
+  volunteer-identity:
