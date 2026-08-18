@@ -1,48 +1,19 @@
 # Nœuds Volontaires — Guide de démarrage
 
-Ce dépôt permet à un·e volontaire de mettre à disposition son PC comme nœud de calcul pour une expérience d'apprentissage distribué, via Docker. Aucune installation permanente n'est faite sur votre système : tout tourne dans un conteneur.
+Ce dépôt permet à un·e volontaire de mettre à disposition son PC comme nœud de calcul pour une expérience d'apprentissage distribué, via Docker. Un script d'installation unique s'occupe de tout : installation des outils nécessaires (Docker, Git, Tailscale), rattachement au réseau privé de l'expérience et démarrage du conteneur. Le calcul lui-même tourne entièrement dans un conteneur, rien n'est installé en dehors de Docker et des outils listés ci-dessous.
 
 ## Prérequis
 
-- **Docker** installé et démarré sur votre machine (voir [Étape 1](#étape-1--installer-docker)).
-- **Git** installé, pour cloner le dépôt.
-- Sous **Windows** : un terminal capable d'exécuter un script `.sh`, par exemple **WSL2** (recommandé) ou **Git Bash**.
+- **Windows 10 version 22H2 (build 19045) ou supérieur**, en **64 bits**, avec les droits **administrateur**,
+  OU **Linux** (distribution avec `apt`, `dnf`, `yum`, `pacman` ou `zypper`) avec les droits `sudo`.
+- Une connexion Internet, pour le téléchargement de Docker/Tailscale.
+- macOS n'est pas pris en charge par les scripts d'installation.
+
+Docker, Git, Tailscale (et WSL2 sous Windows) sont installés **automatiquement** par le script de l'étape 3 — aucune installation manuelle préalable n'est nécessaire.
 
 ---
 
-## Étape 1 — Installer Docker
-
-#### Windows
-
-1. Installez [WSL2](https://learn.microsoft.com/fr-fr/windows/wsl/install) si ce n'est pas déjà fait (`wsl --install` dans un PowerShell administrateur, puis redémarrez).
-2. Installez [Docker Desktop](https://www.docker.com/products/docker-desktop/) et, lors de l'installation, activez l'intégration WSL2.
-3. Lancez Docker Desktop et vérifiez qu'il tourne (icône dans la barre des tâches).
-4. Ouvrez un terminal **WSL2** (ou Git Bash) pour la suite des étapes.
-
-#### Linux
-
-Suivez la documentation officielle pour votre distribution : [docs.docker.com/engine/install](https://docs.docker.com/engine/install/).
-
-Vérifiez ensuite que Docker fonctionne sans `sudo` (facultatif mais pratique) :
-
-```bash
-sudo usermod -aG docker $USER
-```
-
-Puis déconnectez-vous/reconnectez-vous (ou redémarrez la session).
-
-#### Vérification (Windows et Linux)
-
-```bash
-docker --version
-docker compose version
-```
-
-Les deux commandes doivent afficher un numéro de version sans erreur.
-
----
-
-## Étape 2 — Cloner le dépôt
+## Étape 1 — Récupérer le dépôt
 
 ```bash
 git clone git@github.com:mbassi237/noeuds_volontaires.git
@@ -51,50 +22,71 @@ cd noeuds_volontaires
 
 (Si vous n'avez pas de clé SSH configurée sur GitHub, utilisez plutôt `https://github.com/mbassi237/noeuds_volontaires.git`.)
 
+Si Git n'est pas encore installé sur votre machine, téléchargez plutôt le dépôt en `.zip` depuis GitHub (bouton **Code → Download ZIP**) et extrayez-le : le script d'installation installera Git pour vous à l'étape 3.
+
 ---
 
-## Étape 3 — Configurer le fichier `.env`
+## Étape 2 — Le fichier `.env`
 
-Le fichier `.env` est déjà présent dans le dépôt. **Avant de lancer quoi que ce soit**, ouvrez-le et renseignez les valeurs qui vous seront communiquées le jour de l'expérience :
+Le fichier `.env` est déjà présent dans le dépôt et **pré-rempli avec les valeurs de l'expérience en cours** (serveur, clé du réseau privé, etc.). Dans la plupart des cas, vous n'avez rien à y modifier.
+
+Si les organisateurs vous demandent explicitement d'y ajuster une valeur :
 
 ```bash
 nano .env
 ```
 
-Valeurs à adapter :
-
 | Variable | Description |
 |---|---|
-| `VOLUNTEER_ID` | Identifiant unique qui vous sera attribué pour l'expérience |
-| `N_VOLUNTEERS` | Nombre total de volontaires participant à l'expérience |
-| `CPU_CORES` | Nombre de cœurs CPU que vous acceptez d'allouer |
-| `RAM_GB` | Quantité de RAM (en Go) que vous acceptez d'allouer |
-| `NETWORK_MBPS` | Bande passante réseau estimée que vous acceptez d'allouer |
+| `COORDINATOR_HOST` / `MANAGER_HOST` | Adresse du serveur de l'expérience (déjà renseignée) |
+| `TAILSCALE_AUTHKEY` | Clé permettant à votre machine et au conteneur de rejoindre le réseau privé de l'expérience (déjà renseignée) |
+| `VOLUNTEER_ID` / `N_VOLUNTEERS` | Optionnels — laissez vides pour une attribution automatique par le coordinateur |
+| `CPU_CORES` / `RAM_GB` / `NETWORK_MBPS` | Optionnels — indications de ressources allouées, à ne renseigner que si demandé |
 
-Les autres variables (`COORDINATOR_HOST`, `MANAGER_HOST`, `DATASET`, etc.) sont normalement déjà correctement pré-configurées — ne les modifiez que si on vous le demande explicitement.
-
-La variable `TAILSCALE_AUTHKEY` doit également être renseignée : c'est la clé qui permet au **conteneur** de rejoindre automatiquement le tailnet de l'expérience (VPN reliant votre PC au serveur central). Elle vous sera communiquée avec les autres valeurs.
+Ne modifiez les autres variables que si cela vous est explicitement demandé.
 
 ---
 
-## Étape 4 — Lancer le nœud volontaire
+## Étape 3 — Lancer le nœud volontaire
 
-Une fois le `.env` configuré, exécutez le script de lancement :
+### Windows
+
+Le plus simple : **double-cliquez sur [`Lancer-volontaire.bat`](Lancer-volontaire.bat)**, dans le dossier du projet.
+
+Ce lanceur, sans rien à taper :
+
+1. demande automatiquement les droits administrateur (acceptez la fenêtre qui s'ouvre),
+2. débloque le script PowerShell (Windows bloque par défaut les scripts téléchargés),
+3. lance [`talinet_volunteer.ps1`](talinet_volunteer.ps1).
+
+Alternative en ligne de commande : ouvrez un **Terminal/PowerShell en administrateur** (clic droit sur le menu Démarrer → « Terminal (admin) »), placez-vous dans le dossier du projet, puis :
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\talinet_volunteer.ps1
+```
+
+> N'utilisez pas WSL2 ni Git Bash pour lancer l'installation sur Windows : le script `.ps1` s'en charge lui-même, y compris l'activation de WSL2 si besoin. Si un redémarrage est demandé pour terminer l'activation de WSL2, relancez simplement le script après le redémarrage — il reprend où il s'était arrêté.
+
+### Linux
 
 ```bash
 chmod +x talinet_volunteer.sh
 ./talinet_volunteer.sh
 ```
 
-Ce script va, dans l'ordre :
+Le mot de passe administrateur (`sudo`) vous sera demandé si nécessaire pour installer les paquets manquants.
 
-1. Télécharger (ou construire) l'image Docker du volontaire.
-2. Démarrer le conteneur (`docker compose up -d`), qui rejoint lui-même le tailnet de l'expérience au démarrage grâce à `TAILSCALE_AUTHKEY` — aucune installation ni configuration réseau sur votre machine n'est nécessaire, y compris sous Windows/macOS.
-3. Afficher les logs du conteneur en direct.
+### Ce que le script fait, dans l'ordre (Windows comme Linux)
 
-Laissez ce terminal ouvert pour continuer à suivre les logs, ou fermez-le : le conteneur continue de tourner en arrière-plan.
+1. **Vérifie le système** : version d'OS, architecture, espace disque, accès Internet.
+2. **Installe les outils manquants** : Git, Docker (+ greffon `compose`), Tailscale — et WSL2 sous Windows. Rien n'est réinstallé si déjà présent : le script peut être relancé sans risque en cas d'interruption.
+3. **Rattache la machine au réseau privé** de l'expérience via Tailscale, avec la clé `TAILSCALE_AUTHKEY`.
+4. **Vérifie la liaison** avec le serveur de l'expérience (ping sur le réseau privé). Si le serveur ne répond pas encore, ce n'est pas bloquant : l'entraînement démarrera dès qu'il sera accessible.
+5. **Démarre le conteneur** (`docker compose pull` puis `up -d`), qui rejoint lui-même, en plus, le tailnet de l'expérience à son démarrage.
+6. **Affiche les logs** du conteneur en direct.
 
-> Le conteneur a besoin d'un accès `/dev/net/tun` et de la capacité `NET_ADMIN` (déjà déclarés dans `docker-compose.yml`) pour établir sa propre connexion Tailscale — c'est normal et attendu, aucune action de votre part n'est requise au-delà de démarrer Docker.
+Laissez le terminal ouvert pour continuer à suivre les logs, ou fermez-le : le conteneur continue de tourner en arrière-plan et redémarre automatiquement si la machine est éteinte puis rallumée.
 
 ---
 
@@ -129,17 +121,18 @@ Voir [VOLUNTEER_README.md](VOLUNTEER_README.md) pour plus de détails sur ce que
 
 ## Résumé rapide
 
-```bash
-# 1. Installer Docker (voir ci-dessus selon votre OS)
+### Windows
 
-# 2. Cloner et se placer dans le dépôt
+```text
+1. Cloner ou télécharger le dépôt (bouton Code → Download ZIP si Git n'est pas installé)
+2. Double-cliquer sur Lancer-volontaire.bat
+```
+
+### Linux
+
+```bash
 git clone git@github.com:mbassi237/noeuds_volontaires.git
 cd noeuds_volontaires
-
-# 3. Éditer .env avec les valeurs communiquées le jour de l'expérience
-nano .env
-
-# 4. Lancer le volontaire
 chmod +x talinet_volunteer.sh
 ./talinet_volunteer.sh
 ```
