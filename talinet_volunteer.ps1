@@ -40,6 +40,26 @@ function Presente($cmd) {
     $null -ne (Get-Command $cmd -ErrorAction SilentlyContinue)
 }
 
+function Rafraichir-Path {
+    # Une session PowerShell garde le PATH qu'elle avait a son ouverture :
+    # un programme installe pendant l'execution reste invisible tant qu'on
+    # ne relit pas les variables d'environnement depuis le registre.
+    $machine = [Environment]::GetEnvironmentVariable("Path", "Machine")
+    $utilisateur = [Environment]::GetEnvironmentVariable("Path", "User")
+    $env:Path = @($machine, $utilisateur | Where-Object { $_ }) -join ";"
+}
+
+function Trouver-Executable($nom, $chemins) {
+    # Cherche d'abord dans le PATH rafraichi, puis aux emplacements connus.
+    Rafraichir-Path
+    $c = Get-Command $nom -ErrorAction SilentlyContinue
+    if ($c) { return $c.Source }
+    foreach ($ch in $chemins) {
+        if ($ch -and (Test-Path $ch)) { return $ch }
+    }
+    return $null
+}
+
 # ── A. Verification du systeme ─────────────────────────────────────────────
 
 Etape "A. Verification du systeme"
@@ -204,7 +224,7 @@ if (Presente "tailscale") {
     Info "Installation de Tailscale..."
     winget install --id tailscale.tailscale -e --source winget `
         --accept-package-agreements --accept-source-agreements --silent | Out-Null
-    $env:Path += ";$env:ProgramFiles\Tailscale"
+    Rafraichir-Path
     Ok "Tailscale installe"
 } else {
     $inst = "$env:TEMP\tailscale-setup.exe"
@@ -212,7 +232,7 @@ if (Presente "tailscale") {
         -OutFile $inst -UseBasicParsing
     Start-Process -FilePath $inst -ArgumentList "/S" -Wait
     Remove-Item $inst -ErrorAction SilentlyContinue
-    $env:Path += ";$env:ProgramFiles\Tailscale"
+    Rafraichir-Path
     Ok "Tailscale installe"
 }
 
@@ -220,8 +240,25 @@ if (Presente "tailscale") {
 
 Etape "C. Rattachement au reseau prive"
 
-$ts = "$env:ProgramFiles\Tailscale\tailscale.exe"
-if (-not (Test-Path $ts)) { $ts = "tailscale" }
+$ts = Trouver-Executable "tailscale" @(
+    "$env:ProgramFiles\Tailscale\tailscale.exe",
+    "${env:ProgramFiles(x86)}\Tailscale\tailscale.exe",
+    "$env:LOCALAPPDATA\Tailscale\tailscale.exe",
+    "$env:ProgramData\chocolatey\bin\tailscale.exe"
+)
+
+if (-not $ts) {
+    Echec "Tailscale est introuvable sur cette machine.
+    L'installation automatique a echoue ou s'est faite ailleurs.
+
+    Installez-le manuellement depuis :
+        https://tailscale.com/download/windows
+
+    Puis FERMEZ cette fenetre, rouvrez un Terminal en administrateur
+    et relancez le script. La reouverture est necessaire pour que
+    Windows tienne compte du nouveau programme."
+}
+Info "Tailscale : $ts"
 
 & $ts status 2>&1 | Out-Null
 if ($LASTEXITCODE -eq 0) {
@@ -256,6 +293,14 @@ if (-not (Test-Path "docker-compose.yml")) {
     Echec "Fichier docker-compose.yml introuvable dans $PWD.
     Placez-vous dans le dossier du projet avant de lancer ce script :
         cd C:\chemin\du\projet"
+}
+
+Rafraichir-Path
+if (-not (Presente "docker")) {
+    Echec "La commande docker est introuvable dans cette session.
+    Docker Desktop est installe mais Windows ne l'a pas encore pris en
+    compte. FERMEZ cette fenetre, rouvrez un Terminal en administrateur
+    et relancez le script."
 }
 
 Info "Telechargement de l'image, plusieurs minutes selon la connexion..."
