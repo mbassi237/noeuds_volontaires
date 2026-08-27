@@ -65,8 +65,11 @@ services:
       - K_NEIGHBORS=${K_NEIGHBORS:-3}
       - GOSSIP_INTERVAL=${GOSSIP_INTERVAL:-60}
       - GOSSIP_FANOUT=${GOSSIP_FANOUT:-1}
-      - LOCAL_EPOCHS=${LOCAL_EPOCHS:-2}
+      - LOCAL_EPOCHS=${LOCAL_EPOCHS:-1}
       - MAX_ROUNDS=${MAX_ROUNDS:-40}
+      # 1800 s : au 26 aout, 69 % des modeles expiraient avant
+      # d'etre recuperes par leur destinataire.
+      - MANAGER_QUEUE_ITEM_TTL_S=${MANAGER_QUEUE_ITEM_TTL_S:-1800}
       - MODEL_NAME=${MODEL_NAME:-resnet18}
       - BATCH_SIZE=${BATCH_SIZE:-32}
       - LEARNING_RATE=${LEARNING_RATE:-0.01}
